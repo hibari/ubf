@@ -1,15 +1,37 @@
-%% @doc Implement the plugin server, an intermediate process between
-%%      the contract manager process and the server application.
-%%
-%% The server application may or may not have a separate process (see
-%% the diagram below).  The there is no application process(es), then
-%% the remote procedure call will be executed by the process executing
-%% this module's `loop()' function.
-%%
-%% This module also implements the plugin manager loop.
-%% TODO More detail, please.
-%%
-%% <img src="../priv/doc/ubf-flow-01.png"></img>
+%%% The MIT License
+%%%
+%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2002 by Joe Armstrong
+%%%
+%%% Permission is hereby granted, free of charge, to any person obtaining a copy
+%%% of this software and associated documentation files (the "Software"), to deal
+%%% in the Software without restriction, including without limitation the rights
+%%% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+%%% copies of the Software, and to permit persons to whom the Software is
+%%% furnished to do so, subject to the following conditions:
+%%%
+%%% The above copyright notice and this permission notice shall be included in
+%%% all copies or substantial portions of the Software.
+%%%
+%%% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+%%% IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+%%% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+%%% AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+%%% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+%%% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+%%% THE SOFTWARE.
+
+%%% @doc Implement the plugin server, an intermediate process between
+%%% the contract manager process and the server application.
+%%%
+%%% The server application may or may not have a separate process (see
+%%% the diagram below).  The there is no application process(es), then
+%%% the remote procedure call will be executed by the process
+%%% executing this module\'s +loop()+ function.
+%%%
+%%% This module also implements the plugin manager loop.
+%%%
+%%% @TODO More detail, please.
 
 -module(ubf_plugin_handler).
 
@@ -17,14 +39,6 @@
 -export([sendEvent/2, install_default_handler/1, install_handler/2]).
 
 -include("ubf.hrl").
-
-%% ubf_plugin_handler API for plugins
--spec ask_manager(Manager::pid(), Call::term()) -> Reply::term().
-
--spec sendEvent(Handler::pid(), Cast::term()) -> ok | no_return().
-
--spec install_default_handler(Handler::pid()) -> ack.
--spec install_handler(Handler::pid(), Fun::fun()) -> ack.
 
 
 %%----------------------------------------------------------------------
@@ -196,6 +210,7 @@ manager_loop(ExitPid, Mod, State) ->
             manager_loop(ExitPid, Mod, State)
     end.
 
+-spec ask_manager(Manager::pid(), Call::term()) -> Reply::term().
 ask_manager(Manager, Q) ->
     Manager ! {self(), {handler_rpc, Q}},
     receive
@@ -206,9 +221,9 @@ ask_manager(Manager, Q) ->
 
 %%----------------------------------------------------------------------
 
-%% @spec (pid(), Msg) -> any()
 %% @doc Send an asynchronous UBF message.
 
+-spec sendEvent(Handler::pid(), Cast::term()) -> ok | no_return().
 sendEvent(Pid, Msg) when is_pid(Pid) ->
     case is_process_alive(Pid) of
         false ->
@@ -218,16 +233,15 @@ sendEvent(Pid, Msg) when is_pid(Pid) ->
             ok
     end.
 
-%% @spec (pid()) -> ack
 %% @doc Install a default handler function (callback-style) for
 %% asynchronous UBF messages.
 %%
 %% The default handler function, drop_fun/1, does nothing.
 
+-spec install_default_handler(Handler::pid()) -> ack.
 install_default_handler(Pid) ->
     install_handler(Pid, fun drop_fun/1).
 
-%% @spec (pid(), function()) -> ack
 %% @doc Install a handler function (callback-style) for asynchronous
 %% UBF messages.
 %%
@@ -239,13 +253,13 @@ install_default_handler(Pid) ->
 %%
 %% If your handler fun must maintain its own state, then you must use
 %% an intermediate anonymous fun to bind the state.  See the usage of
-%% the <tt>irc_client_gs:send_self/2</tt> fun as an example.  The
-%% <tt>send_self()</tt> fun is actually arity 2, but the extra
-%% argument is how the author, Joe Armstrong, maintains the extra
-%% state required to deliver the async UBF message to the process that
-%% is executing the event loop processing function,
-%% <tt>irc_client_gs:loop/6</tt>.
+%% the +irc_client_gs:send_self/2+ fun as an example.  The
+%% +send_self()+ fun is actually arity 2, but the extra argument is
+%% how the author, Joe Armstrong, maintains the extra state required
+%% to deliver the async UBF message to the process that is executing
+%% the event loop processing function, +irc_client_gs:loop/6+.
 
+-spec install_handler(Handler::pid(), Fun::fun()) -> ack.
 install_handler(Pid, Fun) ->
     if Pid =/= self() ->
             Pid ! {self(), {install, Fun}},
