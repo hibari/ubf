@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2012 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -64,7 +64,7 @@ prop_ubf_gen_any() ->
     ?FORALL(X, qc_gen:qc_any(),
             begin
                 UBF = ubf:encode(X),
-                {ok, Y, ""} = ubf:decode(UBF),
+                {done, Y, "", undefined} = ubf:decode(UBF),
                 Res = X =:= Y,
                 ?WHENFAIL(io:format("~n~p:~p ~p -> ~p -> ~p~n",[?FILE, ?LINE, X, UBF, Y]), Res)
             end).

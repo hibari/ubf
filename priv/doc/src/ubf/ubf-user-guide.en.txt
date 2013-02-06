@@ -1,22 +1,22 @@
 // -*- Doc -*-
 // vim: set syntax=asciidoc:
 
-= UBF User's Guide _1st DRAFT_
-:Date: 2011/12/20
-:Revision: 0.3.4
-:Copyright: 2002 Joe Armstrong
+= UBF 2.0 User's Guide
+:Date: 2012/11/22
+:Revision: 1.0.1
+:Copyright: 2012 by Joseph Wayne Norton <norton@alum.mit.edu>
 :Copyright: 2010-2011 Gemini Mobile Technologies, Inc.  All rights reserved.
-
+:Copyright: 2002 Joe Armstrong
 
 <<<
 == Preface
 
-UBF is a framework that permits the Erlang to talk to the outside
-world <<UBFPAPER>>.  The acronym "UBF" stands for "Universal Binary
-Format", designed and implemented by Joe Armstrong.
+UBF is a framework that permits Erlang and the outside world
+<<UBFPAPER>> to talk with each other.  The acronym "UBF" stands for
+"Universal Binary Format", designed and implemented by Joe Armstrong.
 
 This document and the corresponding open-source code repositories
-hosted on github <<UBF>> are based on Joe Armstrong's original UBF
+hosted on GitHub <<UBF>> are based on Joe Armstrong's original UBF
 site <<UBFSITE>> and UBF code with an MIT license file added to the
 distribution.  Since then, a large number of enhancements and
 improvements have been added.
@@ -239,7 +239,7 @@ follows:
 
 Where 'C' is not one of the reserved byte codes, > means store the top
 of the recognition stack in the register 'C' and pop the recognition
-stack.  For caching optimizations, subsequent reuse of the single
+stack.  For caching optimization, subsequent reuse of the single
 character 'C' means push register 'C' onto the recognition stack.
 
 ==== Object
@@ -299,27 +299,27 @@ The version of the contract is specified as a double-quoted string.
 
 ==== Types: +TYPES.
 
-The UBF(b) type system has user-defined types and predefined types.
-User-defined types and predefined types are either primitive types or
-complex types.
+The UBF(b) type system has user-defined types, builtin types, and
+predefined types.  All types are either primitive types or complex
+types.
 
 The primitive types are Integer, Range, Float, Binary, String, Atom,
 and Reference.  The complex types are Alternative, Tuple, Record,
-Extended Record, and List.  User-defined "complex types" are defined
-recursively.
+Extended Record, and List.  Builtin and User-defined "complex types"
+are defined recursively.
 
-===== Definition: X() = T
+===== Definition: X() :: T
 
 New types are defined by the notation:
 
 ------
-X() = T;
+X() :: T;
 ------
 
 and the last type of new types must be defined by the notation:
 
 ------
-X() = T.
+X() :: T.
 ------
 
 The name of the type is 'X' and the type's definition 'T' is either a
@@ -380,20 +380,77 @@ T2.
 A type {X1, X2, ..., Xn} is of type "{T1, T2, ..., Tn}" if X1 is of
 type T1, X2 is of type T2, ... and Xn is of type Tn.
 
-===== Record: name#{x=T1, y=T2, ..., z=Tn}
+===== Record: name#{x::T1, y::T2, ..., z::Tn} _or_ name#{x=D1::T1, y=D2::T2, ..., z=Dn::Tn}
 
 A record type is syntactic sugar for a tuple of type "{name, T1, T2,
 ..., Tn}" where name, x, y, ..., and z are atoms.
 
-===== Extended Record: name##{x=T1, y=T2, ..., z=Tn}
+Optionally, the default value of a record field can be specified.
+
+CAUTION: Caution is required when using another record as the default
+value of a record field.  This feature has not been fully tested.
+
+===== Extended Record: name##{x::T1, y::T2, ..., z::Tn} _or_ name##{x=D1::T1, y=D2::T2, ..., z=Dn::Tn}
 
 An extended record type is syntactic sugar for a tuple of type "{name,
-T1, T2, ..., Tn, '$fields'=[x,y,...,z], '$extra'=Extra}" where name,
+T1, T2, ..., Tn, '$fields'::[x,y,...,z], '$extra'::Extra}" where name,
 x, y, ..., and z are atoms and Extra is any valid term.
 
-===== List: [T]
+Optionally, the default value of a record field can be specified.
+
+CAUTION: Caution is required when using another record as the default
+value of a record field.  This feature has not been fully tested.
+
+===== List: [T] _or_ [T]{[0-9]+} _or_ [T]{[0-9]+,} _or_ [T]{,[0-9]+} _or_ [T]{[0-9]+,[0-9]+}
 
 A type [X1, X2, ..., Xn] is of type [T] if all of Xi are of type T.
+
+Unbounded, bounded, left unbounded, and right unbounded lists are
+supported.
+
+===== Builtin: B()
+
+Builtin types are referenced by the notation:
+
+------
+B()
+------
+
+The name of the builtin type is 'B' and builtin types are of 2
+categories: +Erlang+ and +UBF+.  The names used for builtin types are
+reserved and cannot be used for user-defined types.
+
+Erlang builtin types are a subset of the types defined by EEP8
+<<EEP8>>.  EEP8 types are used for authoring Erlang +types+ and
++specs+ definitions.
+
+|============
+| nil()             | []
+| term()            | any()
+| boolean()         | 'false' | 'true'
+| byte()            | 0..255
+| char()            | 0..16#10ffff
+| non_neg_integer() | 0..
+| pos_integer()     | 1..
+| neg_integer()     | ..-1
+| number()          | integer() | float()
+| string()          | [char()]
+| nonempty_string() | [char()]+
+| module()          | atom()
+| mfa()             | {atom(), atom(), byte()}
+| node()            | atom()
+| timeout()         | 'infinity' | non_neg_integer()
+| no_return()       | none()
+|
+|============
+
+UBF builtin types are types particular to UBF that can be helpful for
+encoding and decoding proplists and strings.
+
+|============
+| ubfproplist()     | {'#P', [{term(), term()}]}
+| ubfstring()       | {'#S', [byte()]}
+|============
 
 ===== Predefined: P() _or_ P(A1, A2, ..., An)
 
@@ -409,56 +466,48 @@ or by the notation:
 P(A1, A2, ..., An)
 ------
 
-The name of the predefined type is 'P'.  Using the second notation,
-attributes can be specified to make the predefined type less general
-and thus more specific when matching objects.
+The name of the predefined type is 'P'.  The names used for predefined
+types are reserved and cannot be used for user-defined types.
+
+Using the second notation, attributes can be specified to make the
+predefined type less general and thus more specific when matching
+objects.
 
 |============
 |          | ascii | asciiprintable | nonempty | nonundefined
+| any      |   X   |       X        |    O     |      O
+| none     |   X   |       X        |    X     |      X
 | integer  |   X   |       X        |    X     |      X
 | float    |   X   |       X        |    X     |      X
 | binary   |   O   |       O        |    O     |      X
-| string   |   O   |       O        |    O     |      X
 | atom     |   O   |       O        |    O     |      O
 | tuple    |   X   |       X        |    O     |      X
 | list     |   X   |       X        |    O     |      X
-| proplist |   X   |       X        |    O     |      X
-| term     |   X   |       X        |    O     |      O
-| void     |   X   |       X        |    X     |      X
 |============
 
 The above table summarizes the set of supported predefined types and
 their respective optional attributes.
 
-The "integer", "float", "binary", "string", "atom", "tuple", and
+The "any" predefined type matches any object.
+
+The "none" predefined type is a placeholder to describe the return
+value of a function call that does not return to the caller.
+
+The "integer", "float", "binary", "atom", "boolean", "tuple", and
 "list" predefined types match directly to the corresponding primitive
 or complex type.
 
-The "term" predefined type matches any object.
-
-The "proplist" predefined type is a specialized version of the "list"
-predefined type that matches the following types:
-
-------
-[{term(), term()}]
-------
-
-The "void" predefined type is a placeholder to describe the return
-value of a function call that does not return to the caller.
-
-The "ascii" attribute permits matches with binaries, strings, and
-atoms containing only ASCII values <<RFC20>>.  Similarly, the
+The "ascii" attribute permits matches with binaries and atoms
+containing only ASCII values <<RFC20>>.  Similarly, the
 "asciiprintable" attribute permits matches with only printable ASCII
 values.
 
-The "nonempty" attribute permits matches with binaries, strings,
-atoms, tuples, lists, proplists, and terms that are of length greater
-than zero.  The following objects would not be matched with the
-"nonempty" attribute:
+The "nonempty" attribute permits matches with binaries, atoms, tuples,
+lists, and any that are of length greater than zero.  The following
+objects would not be matched with the "nonempty" attribute:
 
 ------
 <<"">>
-""
 ''
 {}
 []
@@ -707,11 +756,11 @@ where L is an Erlang list.
 As a by-product of a plugin's compilation and if one or more "record"
 or "extended record" types were declared in a plugin's contract, an
 Erlang "header" file containing the plugin's record definitions is
-automatically created.  This Erlang "header" file can be included by
-the plugin module itself or by other Erlang modules used by the
-server's application.  By convention, this Erlang "header" file has
-the same base filename as the plugin but having a ".huc" as the suffix
-part.
+automatically created in an application's ebin directory.  This Erlang
+"header" file can be included by the plugin module itself or by other
+Erlang modules used by the server's application.  By convention, this
+Erlang "header" file has the same base filename as the plugin but
+having a ".hrl" as the suffix part.
 
 TIP: There are 2 experimental prototypes for extending UBF's type and
 plugin framework.  <<UBF_ABNF>> is a framework for integrating UBF and
@@ -792,7 +841,7 @@ Erlang record {foo, 42} and the general tuple {bar, 42} would look
 like this:
 
 ------
-   record (defined in the contract as "foo() = #foo{attribute1 = term()};")
+   record (defined in the contract as "foo() :: #foo{attribute1 :: term()};")
 
       {"$R":"foo", "attribute1":42}
 
@@ -809,7 +858,7 @@ See <<UBF_JSONRPC>> for further information.
 
 TIP: Gemini Mobile Technologies, Inc. has implemented and open-sourced
 a module for classifying the input character set to detect non-UTF8
-JSON inputs <<GMTCHARSET>>.
+JSON inputs <<JSFCHARSET>>.
 
 ==== TBF / FTBF / NTBF / FNTBF:  Binary Format - Thrift / Framed Thrift / Native Thrift / Framed Native Thrift
 
@@ -845,7 +894,7 @@ can communicate with a UBF "NTBF" server and a UBF "NTBF" client can
 communicate with a standard Thrift server.
 
 NTBF *cannot* encode and decode all UBF(b) objects.  There is no
-straigthforward convention for converting Erlang terms to Thrift
+straightforward convention for converting Erlang terms to Thrift
 messages.  Synchronous calls are implemented as Thrift 'T-CALL' and
 'T-REPLY' message pairs or 'T-CALL' and 'T-EXCEPTION' message pairs.
 Asynchronous casts are implemented as Thrift 'T-ONEWAY' messages.
@@ -987,8 +1036,7 @@ follows:
 {\'proto', {\'ubf' | \'ebf' | \'jsf' | \'tbf' |  \'ftbf' | atom()}}::
   Enable the UBF, EBF, JSF, TBF, FTBF, or an alternative protocol wire
   format. Default: \'ubf'.
-
-{\'proto', {\'ubf' | \'ebf' | \'jsf' | \'tbf' |  \'ftbf' | atom(), proplist()}}::
+{\'proto', {\'ubf' | \'ebf' | \'jsf' | \'tbf' |  \'ftbf' | atom(), [atom() | tuple()]}}::
   Enable the UBF, EBF, JSF, TBF, FTBF, or an alternative protocol wire
   format with options. Default: {\'ubf', []}. Supported options:
     \'safe';;
@@ -1007,7 +1055,7 @@ follows:
   Set the starting plugin, set after a client first connects to the
   server.  If not set, client may select the service using the
   startSession() API.  There is no default setting.
-{\'serverhello', string() | \'undefined'}::
+{\'serverhello', ubfstring() | \'undefined'}::
   Meta contract greeting string, sent when a client first connects to
   the server.  If \'undefined', server hello is not sent to the
   client.  Default: "meta_server".
@@ -1045,22 +1093,25 @@ specifying the following options: [{\'proto', \'tbf'},
 === Stateless
 
 The stateless server provides a simplified callback API and
-implementation in comparision to Joe Armstrong's original UBF server.
+implementation in comparison to Joe Armstrong's original UBF server.
 The stateless server is helpful to applications that do not require
 explicit state management by the UBF server.
 
 The "ubf_plugin_stateless.hrl" Erlang header file defines the callback
-APIs to be implemented by a stateless plugin.  The five callbacks are
-mandatory for all stateless plugins.
+APIs to be implemented by a stateless plugin.  The seven callbacks
+are mandatory for all stateless plugins.
 
 ------
 %% common callback API
--spec info() -> string().
--spec description() -> string().
+-spec info() -> ubfstring().
+-spec description() -> ubfstring().
 -spec handlerStop(Handler::pid(), Reason::term(), StateData::term()) ->
                   NewStateData::term().
 
 %% stateless callback API
+-spec moduleStart(args()::term()) -> any().
+-spec moduleRestart(args()::term()) -> any().
+
 -spec handlerStart(Args::term()) ->
                   {accept, Reply::term(), StateName::atom(), StateDate::term()} |
                   {reject, Reply::term()}.
@@ -1069,6 +1120,11 @@ mandatory for all stateless plugins.
 
 The info/0 and description/0 functions provide short and long
 information about the plugin's service, respectively.
+
+The moduleStart/1 function is called once after the plugin's service
+is started.  The return value is ignored.  The moduleRestart/1
+function is called once after each time the plugin's service is
+restarted.  The return value is ignored.
 
 The handlerStart/1 function is called when starting a new session for
 the plugin's service.  The plugin may accept or reject the start
@@ -1081,11 +1137,12 @@ The handlerStop/3 function is called when stopping a session of the
 plugin's service.  The plugin may perform some cleanup inside the
 handlerStop function.
 
-The handlerRpc/1 function is called when processing a synchronous call.
+The handlerRpc/1 function is called when processing a synchronous
+call.
 
 For example, the following "skeleton" implementation of a <<BERTRPC>>
 server implemented by UBF illustrates a typical stateless server.  The
-source code for this implementation can be found on github
+source code for this implementation can be found on GitHub
 <<UBF_BERTRPC>>.
 
 [source,erlang]
@@ -1111,10 +1168,10 @@ The above example also introduces three new concepts:
 
 - The "?S(X)" macro definition plus other helpers are located in the
   "ubf.hrl" Erlang header file.  For Erlang, the implementation of a
-  UBF string is a two tuple having \'#S' as the first element and a
-  list of integers as the second element.  A similar technique is also
-  used for the implementation of a UBF proplist (i.e. \'#P' and
-  "?P(X)).
+  UBF +ubfstring()+ is a two tuple having \'#S' as the first element
+  and a list of bytes as the second element.  A similar technique is
+  also used for the implementation of a UBF +ubfproplist()+
+  (i.e. \'#P' and "?P(X)).
 
 === Stateful
 
@@ -1129,10 +1186,10 @@ mandatory for all stateful plugins.
 
 ------
 %% common callback API
--spec info() -> string().
--spec description() -> string().
--spec handlerStop(Handler::pid(), Reason::term(), StateData::term()) ->
-                  NewStateData::term().
+-spec info() -> ubfstring().
+-spec description() -> ubfstring().
+-spec handlerStop(Handler::pid(), Reason::term(), ManagerData::term()) ->
+                  NewManagerData::term().
 
 %% stateful callback API
 -spec handlerStart(Args::term(), Manager::pid()) ->
@@ -1170,6 +1227,8 @@ The managerStart/1 function is called once at the start of the
 server's initialization for each plugin's service.
 
 The managerRestart/2 function is called to restart a plugin's service.
+The callback function is expected to forward the request to the
+manager process and relay the manager's reply.
 
 The managerRpc/2 function is called when processing a call from
 handler.  A handler uses the ubf_plugin_handler:ask_manager/2 function
@@ -1238,8 +1297,37 @@ known) is returned.  For TCP/IP transports, the default method is to
 connect to the specified host() and TCP ipport().  For the ETF
 transport, the alternative method is to connect to server() using the
 specified plugins().  The server() is either the process id or process
-registered name for an already-started UBF server.  See <<Servers>>
-for a description of options().
+registered name for an already-started UBF server.
+
+The list of supported options() are as follows:
+
+{\'clientport', ipport() | {ipport(), ipport()}}::
+  Specifies the TCP port to be used by the client.  If tuple format, a
+  port is automatically selected within the specified range.  If
+  \'undefined', a random port is automatically selected.  Default:
+  \'undefined'.
+{\'proto', {\'ubf' | \'ebf' | \'jsf' | \'tbf' |  \'ftbf' | atom()}}::
+  Enable the UBF, EBF, JSF, TBF, FTBF, or an alternative protocol wire
+  format. Default: \'ubf'.
+{\'proto', {\'ubf' | \'ebf' | \'jsf' | \'tbf' |  \'ftbf' | atom(), [atom() | tuple()]}}::
+  Enable the UBF, EBF, JSF, TBF, FTBF, or an alternative protocol wire
+  format with options. Default: {\'ubf', []}. Supported options:
+    \'safe';;
+    Prevents decoding data that may be used to attack the Erlang
+    system.  In the event of receiving unsafe data, decoding fails
+    with a badarg error.
+{\'startplugin', module()}::
+  Set the starting plugin, set after a client first connects to the
+  server.  If not set, client's caller may select the service using
+  the startSession() API. Default: \'undefined'.
+{\'serverhello', true | 'undefined'}::
+  Meta contract greeting string, sent to a client when it first connects to
+  the server.  If \'undefined', client does not expect server hello to
+  be sent by the server. Default: \'true'.
+{\'simplerpc', boolean()}::
+  Set the simple RPC mode.  If \'true', client expects only the rpc
+  reply from the server.  If \'false', server returns the rpc reply and next
+  state to client.  Default: \'false'.
 
 The rpc/{2,3} functions make a synchronous call to the server.
 
@@ -1284,12 +1372,15 @@ client.
 ==== EUnit Tests
 
 The eunit tests in the "test/eunit" directory perform several smoke
-and error handling uses cases.
+and error handling uses cases.  The stateless_plugin and
+stateful_plugin test applications are concrete examples on how to
+integrate one or more UBF listeners into an Erlang/OTP application.
 
 ==== QuickCheck Tests
 
-The quickcheck tests and related helper libaries in the "test/eqc"
-directory have not been open sourced yet.  Please stay tuned!
+The quickcheck tests and related helper libraries in the "test/eqc"
+directory have been open sourced.  Please stay tuned for further
+documentation in the future.
 
 See <<QUVIQ>> for further information about quickcheck.
 
@@ -1330,11 +1421,9 @@ follow this recipe:
 ------
 $ mkdir working-directory-name
 $ cd working-directory-name
-$ git clone git://github.com/norton/ubf.git ubf
+$ git clone https://github.com/ubf/ubf.git ubf
 $ cd ubf
-$ ./rebar get-deps
-$ ./rebar compile
-$ ./rebar eunit
+$ make deps clean compile test
 ------
 
 For an alternative recipe with other "features" albeit more complex,
@@ -1353,28 +1442,28 @@ This section describes the basic recipes for the following items:
 Before getting started, review this checklist of tools and software.
 Please install and setup as needed.
 
+Erlang/OTP (Mandatory)::
+- Erlang - http://www.erlang.org/
+  * *R13B04 or newer, R15B02 has been tested most recently*
+  * If needed, see <<ErlangOTP>> for instructions to build Erlang/OTP
+    from source.
 Git (Mandatory)::
 - Git - http://git-scm.com/
-  * *Git 1.5.4 or newer, Git 1.7.8 has been tested recently*
+  * *Git 1.5.4 or newer, Git 1.8.0 has been tested most recently*
   * _required for Repo and GitHub_
 - GitHub - https://github.com
   * Anonymous read-only access using the GIT protocol is default.
   * Team members having read-write access should add his/her ssh
     public key under your GitHub account.
-Erlang/OTP (Mandatory)::
-- Erlang - http://www.erlang.org/
-  * *R13B04 or newer, R15B has been tested most recently*
-  * If needed, see <<ErlangOTP>> for instructions to build Erlang/OTP
-    from source.
 Python (Mandatory)::
 - Python - http://www.python.org
-  * *Python 2.4 or newer, Python 2.7.1 has been tested most recently
+  * *Python 2.4 or newer, Python 2.7.2 has been tested most recently
      (CAUTION: Python 3.x might be too new)*
   * _required for Repo and AsciiDoc_
 AsciiDoc (Optional)::
 - AsciiDoc - http://www.methods.co.nz/asciidoc/index.html
   * Must be version 8.6.1 or newer
-    ** 8.6.6 is the version most recently tested for UBF
+    ** 8.6.8 is the version most recently tested for UBF
   * Plus the following support tools:
     ** ImageMagick - http://www.imagemagick.org/
     ** Graphviz - http://www.graphviz.org/
@@ -1388,8 +1477,8 @@ AsciiDoc (Optional)::
 In addition to the above list, UBF also depends on two tools to
 automate the downloading and the packaging steps.
 
+- Rebar - https://github.com/rebar/rebar/wiki
 - Repo - http://source.android.com/source/git-repo.html
-- Rebar - https://github.com/basho/rebar/wiki
 
 Instructions for downloading the Repo tool are described next.  The
 Rebar tool is included in UBF's git repositories so there is no need
@@ -1420,13 +1509,13 @@ $ chmod a+x ~/bin/repo
 ------
 $ mkdir working-directory-name
 $ cd working-directory-name
-$ repo init -u git://github.com/norton/manifests.git -m ubf-default.xml
+$ repo init -u https://github.com/ubf/manifests.git -m ubf-default.xml
 ------
 +
 NOTE: Your "Git" identity is needed during the init step.  Please
 enter the name and email of your GitHub account if you have one.  Team
 members having read-write access are recommended to use "repo init -u
-git@github.com:norton/manifests.git -m ubf-default-rw.xml".
+git@github.com:ubf/manifests.git -m ubf-default-rw.xml".
 +
 TIP: If you want to checkout the latest development version of UBF,
 please append " -b dev" to the repo init command.
@@ -1444,7 +1533,7 @@ $ repo sync
 . Build UBF
 +
 ------
-$ cd working-directory-name/src
+$ cd working-directory-name
 $ make compile
 ------
 +
@@ -1455,7 +1544,7 @@ is added to your $PATH environment.
 . Run the unit tests
 +
 ------
-$ cd working-directory-name/src
+$ cd working-directory-name
 $ make eunit
 ------
 
@@ -1465,7 +1554,7 @@ $ make eunit
   .. Build Dialyzer's PLT _(required once)_
 +
 ------
-$ cd working-directory-name/src
+$ cd working-directory-name
 $ make build-plt
 ------
 +
@@ -1475,7 +1564,7 @@ information.
   .. Dialyze with specs
 +
 ------
-$ cd working-directory-name/src
+$ cd working-directory-name
 $ make dialyze
 ------
 +
@@ -1487,14 +1576,14 @@ information.
   .. Dialyze without specs
 +
 ------
-$ cd working-directory-name/src
+$ cd working-directory-name
 $ make dialyze-nospec
 ------
 +
 . To build the Java client and run its encoding/decoding unit test:
 +
 ------
-$ cd working-directory-name/src
+$ cd working-directory-name
 $ make -C lib/ubf/priv/java
 ------
 +
@@ -1521,7 +1610,7 @@ UBF documentation.
 . Building UBF's "Guides" _basic recipe_
 +
 ------
-$ cd working-directory-name/src/lib/ubf/priv/doc/src/ubf
+$ cd working-directory-name/deps/ubf/priv/doc/src/ubf
 $ make clean -OR- make realclean
 $ make
 ------
@@ -1529,14 +1618,14 @@ $ make
 . Building UBF's "Website" _basic recipe_
 +
 ------
-$ cd working-directory-name/src/lib/ubf/priv/doc/src/ubf/website
+$ cd working-directory-name/deps/ubf/priv/doc/src/ubf/website
 $ make clean -OR- make realclean
 $ make
 ------
 +
 NOTE: HTML documentation is written in the "./public_html" directory.
 
-UBF's documentation is authored using AsciiDoc and a few auxillary
+UBF's documentation is authored using AsciiDoc and a few auxiliary
 tools:
 
 - ImageMagick
@@ -1552,8 +1641,8 @@ created by making a symlink to the lang-en.conf file.
 
 ------
 diff -r -u 8.6.4-orig/bin/a2x.py 8.6.4/bin/a2x.py
---- 8.6.4-orig/bin/a2x.py	2011-04-24 00:50:26.000000000 +0900
-+++ 8.6.4/bin/a2x.py	2011-04-24 00:35:55.000000000 +0900
+--- 8.6.4-orig/bin/a2x.py   2011-04-24 00:50:26.000000000 +0900
++++ 8.6.4/bin/a2x.py    2011-04-24 00:35:55.000000000 +0900
 @@ -156,7 +156,10 @@
  def shell_copy(src, dst):
      verbose('copying "%s" to "%s"' % (src,dst))
@@ -1582,35 +1671,35 @@ your own Erlang/OTP system.
 +
 ------
 $ cd working-directory-name
-$ wget http://www.erlang.org/download/otp_src_R15B.tar.gz
+$ wget http://www.erlang.org/download/otp_src_R15B02.tar.gz
 ------
 +
   .. Untar the source code for your Erlang/OTP system.
 +
 ------
 $ cd working-directory-name
-$ tar -xzf otp_src_R15B.tar.gz
+$ tar -xzf otp_src_R15B02.tar.gz
 ------
 +
 . Building _basic recipe_
   .. Change to your working directory and configure Erlang/OTP
 +
 ------
-$ cd working-directory-name/otp_src_R15B
+$ cd working-directory-name/otp_src_R15B02
 $ ./configure --prefix=otp-installing-directory-name
 ------
 +
   .. Build Erlang/OTP
 +
 ------
-$ cd working-directory-name/otp_src_R15B
+$ cd working-directory-name/otp_src_R15B02
 $ make
 ------
 +
 . Installing _basic recipe_
 +
 ------
-$ cd working-directory-name/otp_src_R15B
+$ cd working-directory-name/otp_src_R15B02
 $ sudo make install
 ------
 
@@ -1620,7 +1709,7 @@ to your $PATH environment.
 === GitHub - Forking Your Own Repositories
 
 If you are interested in making your own changes to UBF or to one or
-more of the other UBF-related repositories, it is a straigthforward
+more of the other UBF-related repositories, it is a straightforward
 process to fork and to build your own repositories using <<GITHUB>>.
 GitHub provides a friendly and easy to use environment for developers
 and the like.
@@ -1656,10 +1745,13 @@ _Under Construction - To Be Updated_
 - [[[ERLANG]]] "A general-purpose programming language and runtime
   environment", http://www.erlang.org.
 
+- [[[EEP8]]] "EEP 8: Types and function specifications",
+  http://www.erlang.org/eeps/eep-0008.html.
+
 - [[[GIT]]] "Fast Version Control System", http://git-scm.com.
 
-- [[[GMTCHARSET]]] "Gemini Mobile Technologies, Inc. charset module",
-  https://github.com/norton/gmt-util/blob/master/src/gmt_charset.erl.
+- [[[JSFCHARSET]]] "Gemini Mobile Technologies, Inc. charset module",
+  https://github.com/ubf/ubf-jsonrpc/blob/master/src/jsf_charset.erl
 
 - [[[GITHUB]]] "Secure source code hosting and collaborative
   development ", https://github.com.
@@ -1690,22 +1782,22 @@ _Under Construction - To Be Updated_
 - [[[THRIFT]]] "A software framework for scalable cross-language
   services development.", http://incubator.apache.org/thrift.
 
-- [[[UBF]]] "Universal Binary Format", https://github.com/norton/ubf.
+- [[[UBF]]] "Universal Binary Format", https://github.com/ubf/ubf.
 
 - [[[UBF_ABNF]]] "Universal Binary Format and Augmented Backus-Naur
-  Form", https://github.com/norton/ubf-abnf.
+  Form", https://github.com/ubf/ubf-abnf.
 
 - [[[UBF_BERTRPC]]] "Universal Binary Format and Binary ERlang Term
-  RPC", https://github.com/norton/ubf-bertrpc.
+  RPC", https://github.com/ubf/ubf-bertrpc.
 
 - [[[UBF_EEP8]]] "Universal Binary Format and Erlang Enhancement
-  Proposal 8", https://github.com/norton/ubf-eep8.
+  Proposal 8", https://github.com/ubf/ubf-eep8.
 
 - [[[UBF_JSONRPC]]] "Universal Binary Format and JavaScript Object
-  Notation RPC", https://github.com/norton/ubf-jsonrpc.
+  Notation RPC", https://github.com/ubf/ubf-jsonrpc.
 
 - [[[UBF_THRIFT]]] "Universal Binary Format and Thrift",
-  https://github.com/norton/ubf-thrift.
+  https://github.com/ubf/ubf-thrift.
 
 - [[[UBFPAPER]]] Joe Armstrong, "Getting Erlang to talk to the outside
   world", Proceedings of the 2002 ACM SIGPLAN workshop on Erlang,
@@ -1722,7 +1814,7 @@ _Under Construction - To Be Updated_
 === Acknowledgments
 
 Many, many thanks to Joe Armstrong, UBF's designer and original
-implementor.
+implementer.
 
 Gemini Mobile Technologies, Inc. has approved the release of its
 extensions, improvements, etc. under an MIT license.  Joe Armstrong

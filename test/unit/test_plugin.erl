@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2012 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,7 +27,7 @@
 -include("ubf.hrl").
 
 -export([info/0, description/0,
-         managerStart/1, managerRpc/2,
+         managerStart/1, managerRestart/2, managerRpc/2,
          handlerStart/2, handlerRpc/4, handlerStop/3,
          handlerEvent/1
         ]).
@@ -49,10 +49,12 @@ description() -> "The test server is a ...
 
 managerStart(_) -> {ok, myManagerState}.
 
+managerRestart(_,_) -> ok. %% noop
+
 managerRpc(secret, State) ->
-    {accept, welcomeToFTP, State};
+    {{ok, welcomeToFTP}, State};
 managerRpc(_, State) ->
-    {reject, badPassword, State}.
+    {{error, badPassword}, State}.
 
 %% handlerStart(Args, ManagerPid) ->
 %%   {accept, State, InitialData}
@@ -86,9 +88,9 @@ handlerRpc(funny, List, State, _Env) when is_list(List) ->
 handlerRpc(funny, stop, State, _Env) ->
     {ack, start, State}.
 
-handlerStop(Pid, Reason, State) ->
+handlerStop(Pid, Reason, ManagerData) ->
     io:format("Client stopped:~p ~p~n",[Pid, Reason]),
-    State.
+    ManagerData.
 
 handlerEvent({callback, X}) ->
     sendEvent(self(), {callback, X}),

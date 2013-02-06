@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2012 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -104,7 +104,7 @@ start(Name, Plugins, Port) ->
 %% - +{proto, {ubf | ebf | atom()}}+ Enable the UBF, EBF, or
 %%   an alternative protocol wire format.
 %%   Default: ubf.
-%% - +{proto, {ubf | ebf | atom(), proplist()}}+ Enable the UBF,
+%% - +{proto, {ubf | ebf | atom(), [atom() | tuple()]}}+ Enable the UBF,
 %%   EBF, or an alternative protocol wire format with options.
 %%   Default: +{ubf, []}+.
 %%
@@ -125,7 +125,7 @@ start(Name, Plugins, Port) ->
 %%   client first connects to the server.  If not set, client may
 %%   select the service using the startSession() API.  There is
 %%   no default setting.
-%% - +{serverhello, string() | undefined}+ Meta contract greeting
+%% - +{serverhello, ubfstring() | undefined}+ Meta contract greeting
 %%   string, sent when a client first connects to the server.  If
 %%   undefined, server hello is not sent to the client.
 %%   Default: "meta_server".
@@ -210,12 +210,6 @@ start_ubf_listener(Server0, Plugins, Port, Options) ->
 
                 Driver = self(),
 
-                %% @TODO need to use the active once feature to ensure
-                %% data sent by the client is properly routed to the
-                %% contract manager and not to this driver.  These
-                %% devious lines do not work when the client is not
-                %% waiting for the server hello.
-
                 %% Next few lines are pretty devious but they work!
                 _ = if ServerHello =/= undefined ->
                             %% send hello back to the opening program
@@ -225,18 +219,17 @@ start_ubf_listener(Server0, Plugins, Port, Options) ->
                     end,
 
                 ContractManager = contract_manager:start(SimpleRPC, VerboseRPC, ProcessOptions),
-                %% swap the driver
-                contract_driver:relay(DriverMod, self(), ContractManager),
-
                 Handler = ubf_plugin_handler:start_handler(MetaPlugin, StartPlugin, Server, StatelessRPC, ProcessOptions),
                 receive
                     {state, Handler, StartState} ->
-                        ContractManager !
-                            {start, Driver, Handler, StartState, StartPlugin, TLogMod},
-                        Handler !
-                            {start, ContractManager, TLogMod},
+                        ContractManager ! {start, Driver, Handler, StartState, StartPlugin, TLogMod},
+                        Handler ! {start, ContractManager, TLogMod},
                         %% and activate the loop that will now execute
                         %% the previous devious statements :-)
+
+                        %% swap the driver
+                        contract_driver:relay(DriverMod, self(), ContractManager),
+
                         case (catch contract_driver:loop(DriverMod, StartPlugin, DriverOptions, self(), Socket, IdleTimer)) of
                             {'EXIT', normal} ->
                                 exit(normal);
@@ -288,7 +281,7 @@ start_term_listener(Server0, Plugins, Options) ->
 
 help() ->
     ?S("\n\n See http://www.sics.se/~joe/ubf/ for details of this service.\n"
-       " See http://github.com/norton/ubf for source code\n"
+       " See http://github.com/ubf/ubf for source code\n"
        "     extensions available as part of the larger OSS community.\n"
        " Type 'info'$ for information\n\n").
 

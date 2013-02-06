@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2012 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -32,24 +32,24 @@
 %%% Macros
 %%%-------------------------------------------------------------------
 
-%% @doc ubf string helper
--define(S(X),
-        #'#S'{value=X}).
-
 %% @doc ubf proplist helper
 -define(P(X),
         #'#P'{value=X}).
+
+%% @doc ubf string helper
+-define(S(X),
+        #'#S'{value=X}).
 
 %%%-------------------------------------------------------------------
 %%% Records
 %%%-------------------------------------------------------------------
 
-%% @doc ubf string record
--record('#S',
-        {value="" :: string()}).
-
 %% @doc ubf proplist record
 -record('#P',
         {value=[] :: [{term(),term()}]}).
+
+%% @doc ubf string record
+-record('#S',
+        {value="" :: string()}).
 
 -endif. % -ifndef(ubf)

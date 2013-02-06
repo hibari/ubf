@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2012 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -30,7 +30,7 @@
 
 -callback proto_vsn() -> atom().
 -callback proto_driver() -> module().
--callback proto_packet_type() -> 0 | 1 | 2 | 4.
+-callback proto_packet_type() -> 0 | 1 | 2 | 4 | sunrm.
 
 -else. % -ifndef(old_callbacks).
 
@@ -40,6 +40,8 @@ behaviour_info(callbacks) ->
     [{proto_vsn,0}
      , {proto_driver,0}
      , {proto_packet_type,0}
-    ].
+    ];
+behaviour_info(_Other) ->
+	undefined.
 
 -endif. % -ifndef(old_callbacks).

@@ -1,10 +1,8 @@
-*.app
-*.beam
-*.boot
-*.huc
-*.log
-*.script
+.eqc-info
 .eunit/
+.qc/
+deps/
+ebin/
 erl_crash.dump
 src/contract_lex.erl
 src/contract_yecc.erl

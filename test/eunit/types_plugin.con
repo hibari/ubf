@@ -2,7 +2,7 @@
 
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2012 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,7 +25,7 @@
 
 +NAME("types").
 
-+VSN("ubf1.0").
++VSN("ubf2.0").
 
 %%%%%%
 +TYPES
@@ -33,61 +33,59 @@
 
 %%%%%
 %%% well-known primitives
-bool()                  = true | false;
-expires()               = {integer(), integer(), integer()}; %% erlang-style timestamp
-opaque()                = binary();
-time_t()                = integer();
-timeout()               = infinity | integer(); %% milliseconds
-timeout_or_expires()    = timeout() | expires();
-ts()                    = integer();
-utf8()                  = binary();
+expires()               :: {integer(), integer(), integer()}; %% erlang-style timestamp
+opaque()                :: binary();
+time_t()                :: integer();
+timeout_or_expires()    :: timeout() | expires();
+ts()                    :: integer();
+utf8()                  :: binary();
 
 
 %%%%%
 %%% common primitives
 
-client_breaks_req01()   = client_breaks_req01;
-client_breaks_res01()   = client_breaks_res01;
-client_breaks_req02()   = client_breaks_req02;
-client_breaks_res02()   = client_breaks_res02;
-client_timeout_req03()  = {client_timeout_req03,timeout()};
-client_timeout_res03()  = client_timeout_res03;
-client_timeout_req04()  = {client_timeout_req04,timeout()};
-client_timeout_res04()  = client_timeout_res04;
+client_breaks_req01()   :: client_breaks_req01;
+client_breaks_res01()   :: client_breaks_res01;
+client_breaks_req02()   :: client_breaks_req02;
+client_breaks_res02()   :: client_breaks_res02;
+client_timeout_req03()  :: {client_timeout_req03,timeout()};
+client_timeout_res03()  :: client_timeout_res03;
+client_timeout_req04()  :: {client_timeout_req04,timeout()};
+client_timeout_res04()  :: client_timeout_res04;
 
-server_breaks_req01()   = server_breaks_req01;
-server_breaks_res01()   = server_breaks_res01;
-server_breaks_req02()   = server_breaks_req02;
-server_breaks_res02()   = server_breaks_res02;
-server_timeout_req03()  = {server_timeout_req03,timeout()};
-server_timeout_res03()  = server_timeout_res03;
-server_timeout_req04()  = {server_timeout_req04,timeout()};
-server_timeout_res04()  = server_timeout_res04;
-server_crash_req05()    = server_crash_req05;
-server_crash_res05()    = server_crash_res05;
-server_crash_req06()    = server_crash_req06;
-server_crash_res06()    = server_crash_res06;
+server_breaks_req01()   :: server_breaks_req01;
+server_breaks_res01()   :: server_breaks_res01;
+server_breaks_req02()   :: server_breaks_req02;
+server_breaks_res02()   :: server_breaks_res02;
+server_timeout_req03()  :: {server_timeout_req03,timeout()};
+server_timeout_res03()  :: server_timeout_res03;
+server_timeout_req04()  :: {server_timeout_req04,timeout()};
+server_timeout_res04()  :: server_timeout_res04;
+server_crash_req05()    :: server_crash_req05;
+server_crash_res05()    :: server_crash_res05;
+server_crash_req06()    :: server_crash_req06;
+server_crash_res06()    :: server_crash_res06;
 
-not_implemented_req99() = not_implemented_req99;
-not_implemented_res99() = not_implemented_res99;
+not_implemented_req99() :: not_implemented_req99;
+not_implemented_res99() :: not_implemented_res99;
 
-restart_req()           = restart_req;
-restart_res()           = restart_res;
+restart_req()           :: restart_req;
+restart_res()           :: restart_res;
 
 
 %%%%%
 %%% keepalive
-keepalive_req()         = keepalive;
-keepalive_res()         = ok;
+ubf_keepalive_req()     :: keepalive;
+ubf_keepalive_res()     :: ok;
 
 
 %%%%%
 %%% meta methods
-info_req()              = info;
-info_res()              = string();
+ubf_info_req()          :: info;
+ubf_info_res()          :: ubfstring();
 
-description_req()       = description;
-description_res()       = string();
+ubf_description_req()   :: description;
+ubf_description_res()   :: ubfstring();
 
-contract_req()          = contract;
-contract_res()          = term().
+ubf_contract_req()      :: contract;
+ubf_contract_res()      :: term().

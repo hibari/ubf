@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2012 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -46,8 +46,9 @@ managerStart(_) ->
     new_seed(),
     {ok, ets:new(irc, [])}.
 
-managerRestart(X, _) ->
-    managerStart(X).
+managerRestart(_, _) ->
+    %% noop
+    ok.
 
 handlerStart(_, _ManagerPid) ->
     {accept, yes, start, []}.

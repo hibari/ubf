@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2012 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -86,12 +86,12 @@ type1(_Gen,{prim,0,0,_Tag}) ->
     undefined;
 %% tuple
 type1(Gen,{tuple,Elements}) ->
-    list_to_tuple([type1(Gen,E) || E <- Elements]);
+    list_to_tuple([type1(Gen,E) || E <- tuple_to_list(Elements)]);
 %% record
-type1(Gen,{record,Name,Elements}) when is_atom(Name) ->
-    list_to_tuple([Name|[type1(Gen,E) || E <- tl(tl(Elements))]]);
-type1(Gen,{record_ext,Name,_,Elements}) when is_atom(Name) ->
-    list_to_tuple([Name|[type1(Gen,E) || E <- Elements]]);
+type1(Gen,{record,Name,_,_,Elements}) when is_atom(Name) ->
+    list_to_tuple([Name|[type1(Gen,E) || E <- tl(tuple_to_list(Elements))]]);
+type1(Gen,{record_ext,Name,_,_,Elements}) when is_atom(Name) ->
+    list_to_tuple([Name|[type1(Gen,E) || E <- tl(tuple_to_list(Elements))]]);
 %% list
 type1(Gen,{list,Min,Max,Element}) ->
     repeat(Gen,Min,Max,infinity,Element);
@@ -122,40 +122,32 @@ type1(_Gen,{integer,Value}) when is_integer(Value) ->
 type1(_Gen,{string,Value}) when is_list(Value) ->
     Value;
 %% predef
+type1(_Gen,{predef,any}) ->
+    qc_gen:qc_term();
+type1(_Gen,{predef,none}) ->
+    %% not supported
+    exit(fatal);
 type1(_Gen,{predef,atom}) ->
     qc_gen:qc_atom();
 type1(_Gen,{predef,integer}) ->
-    int();
+    oneof([int(),largeint()]);
 type1(_Gen,{predef,float}) ->
     real();
 type1(_Gen,{predef,binary}) ->
     qc_gen:qc_binary();
 type1(_Gen,{predef,list}) ->
     qc_gen:qc_list();
-type1(_Gen,{predef,proplist}) ->
-    ?P(qc_gen:qc_proplist());
-type1(_Gen,{predef,string}) ->
-    ?S(qc_gen:qc_string());
 type1(_Gen,{predef,tuple}) ->
     qc_gen:qc_tuple();
-type1(_Gen,{predef,term}) ->
-    qc_gen:qc_term();
-type1(_Gen,{predef,void}) ->
-    %% not supported
-    exit(fatal);
 %% predef with attributes
+type1(_Gen,{predef,{any,Attrs}}) ->
+    qc_gen:qc_term(Attrs);
 type1(_Gen,{predef,{atom,Attrs}}) ->
     qc_gen:qc_atom(Attrs);
 type1(_Gen,{predef,{binary,Attrs}}) ->
     qc_gen:qc_binary(Attrs);
 type1(_Gen,{predef,{list,Attrs}}) ->
     qc_gen:qc_list(Attrs);
-type1(_Gen,{predef,{proplist,Attrs}}) ->
-    ?P(qc_gen:qc_proplist(Attrs));
-type1(_Gen,{predef,{string,Attrs}}) ->
-    ?S(qc_gen:qc_string(Attrs));
-type1(_Gen,{predef,{term,Attrs}}) ->
-    qc_gen:qc_term(Attrs);
 type1(_Gen,{predef,{tuple,Attrs}}) ->
     qc_gen:qc_tuple(Attrs);
 %% abnf

@@ -10,24 +10,24 @@
 contracts.</p>
 
 
-<pre><tt>The metaprotocol is used at the beginning of a UBF session to
+<pre><code>The metaprotocol is used at the beginning of a UBF session to
 select one of the UBF(b) contracts that the TCP listener is
 capable of offering.  The list of contracts (or more precisely,
 the Erlang modules that implement the contract(s)) is passed via
 the +ubf_server:start_link()+ function, in the +PluginModule+
-list.</tt></pre>
+list.</code></pre>
 
 
 
-<pre><tt>Code in this module is executed by the "Plugin Handler" process in
-the Process Structure Diagram in the Overview.</tt></pre>
+<pre><code>Code in this module is executed by the "Plugin Handler" process in
+the Process Structure Diagram in the Overview.</code></pre>
 
 
 
-<pre><tt>For the purposes of this module, the list of modules that
+<pre><code>For the purposes of this module, the list of modules that
 implement contracts is passed using Erlang parameterized module
 +Module:new(ModuleList)+ syntax.  See the Erlang/OTP documentation
-for more information on parameterized module syntax and usage.</tt></pre>
+for more information on parameterized module syntax and usage.</code></pre>
 .
 
 <a name="index"></a>
@@ -52,11 +52,7 @@ process(es).</p>.</td></tr></table>
 ###description/0##
 
 
-
-
 `description() -> any()`
-
-
 
 <p>Emit a description string.</p>
 <a name="handlerRpc-4"></a>
@@ -64,11 +60,7 @@ process(es).</p>.</td></tr></table>
 ###handlerRpc/4##
 
 
-
-
 `handlerRpc(State, X2, Data, Manager) -> any()`
-
-
 
 <p>Required UBF contract implementation callback: call an RPC function.</p>
 <a name="handlerStart-2"></a>
@@ -76,11 +68,7 @@ process(es).</p>.</td></tr></table>
 ###handlerStart/2##
 
 
-
-
 `handlerStart(X1, X2) -> any()`
-
-
 
 <p>Required UBF contract implementation callback: start a new session
 handler process.</p>
@@ -89,11 +77,7 @@ handler process.</p>
 ###handlerStop/3##
 
 
-
-
-`handlerStop(Pid, Reason, State) -> any()`
-
-
+`handlerStop(Pid, Reason, ManagerData) -> any()`
 
 <p>Required UBF contract implementation callback: stop a session
 handler process.</p>
@@ -102,11 +86,7 @@ handler process.</p>
 ###info/0##
 
 
-
-
 `info() -> any()`
-
-
 
 <p>Emit an info string.</p>
 <a name="managerRestart-2"></a>
@@ -114,11 +94,7 @@ handler process.</p>
 ###managerRestart/2##
 
 
-
-
 `managerRestart(Args, Manager) -> any()`
-
-
 
 <p>Required UBF contract implementation callback: restart a manager
 process.</p>
@@ -127,11 +103,7 @@ process.</p>
 ###managerRpc/2##
 
 
-
-
 `managerRpc(X1, S) -> any()`
-
-
 
 <p>Required UBF contract implementation callback: call a manager's RPC
 function.</p>
@@ -140,11 +112,7 @@ function.</p>
 ###managerStart/1##
 
 
-
-
 `managerStart(Args) -> any()`
-
-
 
 <p>Required UBF contract implementation callback: start manager
 process(es).</p>

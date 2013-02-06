@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2012 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -35,8 +35,8 @@
 %% common callback API
 -spec info() -> string().
 -spec description() -> string().
--spec handlerStop(Handler::pid(), Reason::term(), StateData::term()) ->
-                  NewStateData::term().
+-spec handlerStop(Handler::pid(), Reason::term(), ManagerData::term()) ->
+                  NewManagerData::term().
 
 %% stateful callback API
 -spec handlerStart(Args::term(), Manager::pid()) ->
@@ -48,7 +48,7 @@
 -spec managerStart(Args::term()) ->
                    {ok, ManagerData::term()}.
 -spec managerRestart(Args::term(), Manager::pid()) ->
-                     {ok, ManagerData::term()} | {error, Reason::term()}.
+                     ok | {error, Reason::term()}.
 -spec managerRpc(Args::term(), ManagerData::term()) ->
                  {ok, NewManagerData::term()} | {error, Reason::term()}.
 

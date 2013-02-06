@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2012 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -97,7 +97,6 @@ loop(Client, State, Data, Manager, Mod, TLogMod, Fun) ->
                     case (catch Mod:handlerRpc(State, Q, Data, Manager)) of
                         {Reply, State1, Data1} ->
                             Client ! {self(), {rpcReply, Reply, State1, same}},
-                            erlang:garbage_collect(),
                             loop(Client, State1, Data1, Manager, Mod, TLogMod, Fun);
                         {changeContract, Reply, Mod1, State1, Data1, Manager1} ->
                             Client ! {self(), {rpcReply, Reply, State,
@@ -120,18 +119,15 @@ loop(Client, State, Data, Manager, Mod, TLogMod, Fun) ->
                             exit({serverPluginHandler, Reason});
                         Reply ->
                             Client ! {self(), {rpcReply, Reply, State, same}},
-                            erlang:garbage_collect(),
                             loop(Client, State, Data, Manager, Mod, TLogMod, Fun)
                     end
             end;
         {Client, {event_in, Event}} ->
             %% asynchronous event handler
             Fun1 = Fun(Event),
-            erlang:garbage_collect(),
             loop(Client, State, Data, Manager, Mod, TLogMod, Fun1);
         {event_out, _}=Event ->
             Client ! {self(), Event},
-            erlang:garbage_collect(),
             loop(Client, State, Data, Manager, Mod, TLogMod, Fun);
         {install, Fun1} ->
             loop(Client, State, Data, Manager, Mod, TLogMod, Fun1);
