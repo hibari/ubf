@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011-2012 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2013 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -182,6 +182,9 @@ manager_loop(ExitPid, Mod, State) ->
             end;
         {'EXIT', ExitPid, Reason} ->
             exit(Reason);
+        {'EXIT', _Pid, shutdown} ->
+            %% supervisor shutdown request
+            exit(shutdown);
         {'EXIT', Pid, Reason} ->
             case (catch Mod:handlerStop(Pid, Reason, State)) of
                 {'EXIT', OOps} ->

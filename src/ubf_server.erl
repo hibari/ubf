@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011-2012 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2013 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -327,7 +327,12 @@ listener_options(Server0, Plugins, Options) ->
                 {ubf_plugin_meta_stateless:new(SortedPlugins), undefined}
         end,
     StartPlugin = proplists:get_value(startplugin, Options, MetaPlugin),
-
+    ServerHello = case StartPlugin of
+                      MetaPlugin ->
+                          undefined;
+                      StartPlugin ->
+                          StartPlugin:contract_name()
+                  end,
     IdleTimer =
         case proplists:get_value(idletimer, Options, infinity) of
             infinity ->
@@ -354,7 +359,7 @@ listener_options(Server0, Plugins, Options) ->
      , DriverOptions
      , proplists:get_value(registeredname, Options, undefined)
      , StatelessRPC
-     , proplists:get_value(serverhello, Options, StartPlugin:contract_name())
+     , proplists:get_value(serverhello, Options, ServerHello)
      , proplists:get_value(simplerpc, Options, false)
      , proplists:get_value(verboserpc, Options, false)
      , proplists:get_value(tlog_module, Options, ?UBF_TLOG_MODULE_DEFAULT)

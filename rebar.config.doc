@@ -6,10 +6,11 @@
              , {packages, false}
              , {stylesheet, ""}   % don't copy stylesheet.css
              , {image, ""}        % don't copy erlang.png
-             , {top_level_readme, {"./README.md", "https://github.com/ubf/ubf"}}
+             , {top_level_readme, {"./README.md", "https://github.com/ubf/ubf", "master"}}
             ]}.
 
 {deps, [{meck, "", {git, "git://github.com/norton/meck.git"}}
         , {edown, "", {git, "git://github.com/norton/edown.git"}}
         , {asciiedoc, "", {git, "git://github.com/norton/asciiedoc.git"}}
+        , {pmod_transform, "", {git, "git://github.com/ubf/pmod_transform.git"}}
        ]}.
