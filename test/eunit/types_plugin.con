@@ -2,7 +2,7 @@
 
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011-2014 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2015 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -65,6 +65,11 @@ server_crash_req05()    :: server_crash_req05;
 server_crash_res05()    :: server_crash_res05;
 server_crash_req06()    :: server_crash_req06;
 server_crash_res06()    :: server_crash_res06;
+
+manager_rpc_req01()     :: manager_rpc_req01;
+manager_rpc_res01()     :: manager_rpc_res01;
+manager_rpc_req02()     :: manager_rpc_req02;
+manager_rpc_res02()     :: manager_rpc_res02;
 
 not_implemented_req99() :: not_implemented_req99;
 not_implemented_res99() :: not_implemented_res99;
