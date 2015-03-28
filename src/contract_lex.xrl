@@ -1,6 +1,7 @@
+%%% -*- mode: erlang -*-
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2015 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -58,6 +59,8 @@ EVENT              :     {token,{eventkwd,TokenLine}}.
                          {token,{binary,TokenLine,B}}.
 "[^"]*"            :     S = lists:sublist(TokenChars, 2, length(TokenChars) - 2),
                          {token,{string,TokenLine,S}}.
+`[^`]*`            :     S = lists:sublist(TokenChars, 2, length(TokenChars) - 2),
+                         {token,{tag,TokenLine,S}}.
 =>                 :     {token,{'=>',TokenLine}}.
 <=                 :     {token,{'<=',TokenLine}}.
 \.\.               :     {token,{'..',TokenLine}}.
@@ -67,11 +70,13 @@ EVENT              :     {token,{eventkwd,TokenLine}}.
 \]\+               :     {token,{']+',TokenLine}}.
 \{\}               :     {token,{'{}',TokenLine}}.
 \[\]               :     {token,{'[]',TokenLine}}.
+\:\:               :     {token,{'::',TokenLine}}.
 [;&,=+()[\]|<>{}#] :     {token,{list_to_atom(TokenChars),TokenLine}}.
 \.{WS}             :     {end_token,{dot,TokenLine}}.
 \.%.*              :     {end_token,{dot,TokenLine}}. % Must special case this
 {WS}+              :     .                            % No token returned,equivalent
 \%.*               :     skip_token.                  % to 'skip_token'
+
 
 Erlang code.
 

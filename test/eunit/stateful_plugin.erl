@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2015 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -28,31 +28,33 @@
 -include("ubf_plugin_stateful.hrl").
 
 -export([info/0, description/0, keepalive/0]).
+-export([managerStart/1, managerRestart/2, managerRpc/2]).
 -export([handlerStart/2, handlerStop/3, handlerRpc/4, handlerRpc/1]).
 
 -export([client_breaks_req01/0, client_timeout_req03/1]).
 -export([server_breaks_req01/0, server_timeout_req03/1, server_crash_req05/0]).
 
--export([managerStart/1, managerRestart/2, managerRpc/2]).
 -import(ubf_plugin_handler, [ask_manager/2]).
 
 %% NOTE the following two lines
 -compile({parse_transform,contract_parser}).
 -add_contract("./test/eunit/stateful_plugin").
--add_types({types_plugin, [contract_res,contract_req,description_res,description_req,info_res,info_req]}).
--add_types({types_plugin, [keepalive_res,keepalive_req]}).
+-add_types({types_plugin, [ubf_contract_res,ubf_contract_req,ubf_description_res,ubf_description_req,ubf_info_res,ubf_info_req]}).
+-add_types({types_plugin, [ubf_keepalive_res,ubf_keepalive_req]}).
 -add_types({types_plugin, [timeout]}).
 -add_types({types_plugin, [server_crash_res05,server_crash_req05,
                            server_timeout_res03,server_timeout_req03,
                            server_breaks_res01,server_breaks_req01,
                            client_timeout_res03,client_timeout_req03,
-                           client_breaks_res01,client_breaks_req01]}).
+                           client_breaks_res01,client_breaks_req01,
+                           manager_rpc_req01,manager_rpc_req02]}).
 -add_types({types_plugin, [restart_res,restart_req,server_crash_res06,
                            server_crash_req06,server_timeout_res04,
                            server_timeout_req04,server_breaks_res02,
                            server_breaks_req02,client_timeout_res04,
                            client_timeout_req04,client_breaks_res02,
-                           client_breaks_req02]}).
+                           client_breaks_req02,manager_rpc_res01,
+                           manager_rpc_res02]}).
 
 
 %% records
@@ -63,6 +65,7 @@
 
 %% managerState
 -record(managerState, {
+          inc=0
          }).
 
 
@@ -74,6 +77,31 @@ description() ->
 
 keepalive() ->
     ok.
+
+
+%% @spec managerStart(Args::list(any())) ->
+%%          {ok, ManagerStateData::term()} | {error, Reason::any()}
+%% @doc start manager
+managerStart(_) ->
+    ManagerStateData = #managerState{},
+    {ok,ManagerStateData}.
+
+%% @spec managerRestart(Args::list(any()), ManagerPid::pid()) ->
+%%          ok | {error, Reason::any()}
+%% @doc restart manager
+managerRestart(Args,ManagerPid) ->
+    ask_manager(ManagerPid,{restartManager, Args}).
+
+
+%% @spec managerRpc(Event::any(), ManagerStateData::term()) ->
+%%          {ok | {ok,term()} | error | {error, Reason::any()}, NewManagerStateData::term()}
+%% @doc rpc manager
+managerRpc({restartManager,Args},ManagerStateData)
+  when is_record(ManagerStateData,managerState) ->
+    managerStart(Args);
+managerRpc(change_state, _ManagerStateData) ->
+    {ok, #managerState{inc=1}}.
+
 
 
 %% @spec handlerStart(Args::list(any()), ManagerPid::pid()) ->
@@ -92,6 +120,9 @@ handlerStop(_Pid,_Reason,ManagerStateData)
 %% @spec handlerRpc(StateName::atom(), Event::any(), StateData::term(), ManagerPid::pid()) ->
 %%          {Reply::any(), NextStateName::atom(), NewStateData::term()}
 %% @doc rpc handler
+handlerRpc(StateName,manager_rpc_req01,StateData,ManagerPid) ->
+    ok = ask_manager(ManagerPid, change_state),
+    {manager_rpc_res01,StateName,StateData};
 handlerRpc(StateName,Event,StateData,_ManagerPid) ->
     {handlerRpc(Event),StateName,StateData}.
 
@@ -140,29 +171,3 @@ server_timeout_req03(Timeout) ->
 
 server_crash_req05() ->
     exit(server_crash_res05_with_this_response).
-
-
-%%%----------------------------------------------------------------------
-%%% Manager functions
-%%%----------------------------------------------------------------------
-
-%% @spec managerStart(Args::list(any())) ->
-%%          {ok, ManagerStateData::term()} | {error, Reason::any()}
-%% @doc start manager
-managerStart(_) ->
-    ManagerStateData = #managerState{},
-    {ok,ManagerStateData}.
-
-%% @spec managerRestart(Args::list(any()), ManagerPid::pid()) ->
-%%          {accept, Reply::any(), StateName::atom(), StateData::term()} | {reject, Reason::any()}
-%% @doc restart manager
-managerRestart(Args,ManagerPid) ->
-    ask_manager(ManagerPid,{restartManager, Args}).
-
-
-%% @spec managerRpc(Event::any(), ManagerStateData::term()) ->
-%%          {ok | {ok,term()} | error | {error, Reason::any()}, NewManagerStateData::term()}
-%% @doc rpc manager
-managerRpc({restartManager,Args},ManagerStateData)
-  when is_record(ManagerStateData,managerState) ->
-    managerStart(Args).
