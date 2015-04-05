@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2015 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -48,7 +48,7 @@ test1() ->
 test2() ->
     L = encode(abc),
     L = "'abc'$",
-    L.
+    true.
 
 test9() ->
     test_ubf({abc,"kdjhkshfkhfkhsfkhaf", [a,c,d]}).

@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2015 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -26,13 +26,10 @@
 -compile(export_all).
 
 %% run at home
-
 test() ->
-    case gen_tcp:connect("p2p.sics.se", 2010,
-			 [binary, {active, true}]) of
-	{ok, Socket} ->
-	    io:format("socket opened~n"),
-	    gen_tcp:send(Socket, "hello"),
-	    true
+    case gen_tcp:connect("p2p.sics.se", 2010, [binary, {active, true}]) of
+        {ok, Socket} ->
+            io:format("socket opened~n"),
+            ok = gen_tcp:send(Socket, "hello"),
+            true
     end.
-

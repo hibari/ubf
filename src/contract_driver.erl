@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2015 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,7 +25,7 @@
 
 -module(contract_driver).
 
--export([start/3, relay/3, loop/5, loop/6, loop/7]).
+-export([start/3, relay/3, loop/5, loop/6]).
 
 %% Interface Functions
 -ifndef(old_callbacks).
@@ -33,17 +33,18 @@
 -type contract() :: module().
 -type options() :: list(term()).
 -type parsed_options() :: term().
--type cont() :: term().
+-type cont_init() :: {init,Rest::term(),Extras::term()} | {more,More::term()}.
+-type cont_done() :: {done,Term::term(),Rest::term(),Extras::term()} | {more,More::term()}.
 -type io() :: any().
 
 -callback start(contract()) -> pid().
 -callback start(contract(), options()) -> pid().
 
--callback init(contract()) -> {parsed_options(), cont()}.
--callback init(contract(), options()) -> {parsed_options(), cont()}.
+-callback init(contract()) -> {parsed_options(), cont_init()}.
+-callback init(contract(), options()) -> {parsed_options(), cont_init()}.
 
 -callback encode(contract(), parsed_options(), term()) -> io().
--callback decode(contract(), parsed_options(), cont(), io(), fun((term()) -> any())) -> cont().
+-callback decode(contract(), parsed_options(), cont_init(), io()) -> cont_done().
 
 -else. % -ifndef(old_callbacks).
 
@@ -55,8 +56,10 @@ behaviour_info(callbacks) ->
      , {init,1}
      , {init,2}
      , {encode,3}
-     , {decode,5}
-    ].
+     , {decode,4}
+    ];
+behaviour_info(_Other) ->
+	undefined.
 
 -endif. % -ifndef(old_callbacks).
 
@@ -77,7 +80,7 @@ loop(Module, Contract, Options, Pid, Socket) ->
     loop(Module, Contract, Options, Pid, Socket, 16#ffffffff).
 
 loop(Module, Contract, Options, Pid, Socket, Timeout) ->
-    ok = inet:setopts(Socket, [{active, true}]),
+    put('ubf_proto', tcp),
     put('ubf_socket', Socket),
     {ParsedOptions, Cont} = Module:init(Contract, Options),
     loop(Module, Contract, ParsedOptions, Pid, Socket, Timeout, Cont).
@@ -94,16 +97,34 @@ loop(Module, Contract, Options, Pid, Socket, Timeout) ->
 
 loop(Module, Contract, Options, Pid, Socket, Timeout, Cont) ->
     receive
+        {Pid, {X, _}=Term} when X =:= event_in; X =:= event_out ->
+            Binary = Module:encode(Contract, Options, Term),
+            ok = gen_tcp:send(Socket, Binary),
+            loop(Module, Contract, Options, Pid, Socket, Timeout, Cont);
         {Pid, Term} ->
+            ok = inet:setopts(Socket, [{active, once}]),
             Binary = Module:encode(Contract, Options, Term),
             ok = gen_tcp:send(Socket, Binary),
             loop(Module, Contract, Options, Pid, Socket, Timeout, Cont);
         {tcp, Socket, Binary} ->
-            Cont1 = Module:decode(Contract, Options, Cont, Binary, fun(Term) -> Pid ! {self(), Term} end),
-            loop(Module, Contract, Options, Pid, Socket, Timeout, Cont1);
-        {changeContract, Contract1} ->
+            case Module:decode(Contract, Options, Cont, Binary) of
+                {done, {X, _}=Term, A, B} when X =:= event_in; X =:= event_out ->
+                    ok = inet:setopts(Socket, [{active, once}]),
+                    Pid ! {self(), Term},
+                    Cont1 = {init, A, B},
+                    loop(Module, Contract, Options, Pid, Socket, Timeout, Cont1);
+                {done, Term, A, B} ->
+                    Pid ! {self(), Term},
+                    Cont1 = {init, A, B},
+                    loop(Module, Contract, Options, Pid, Socket, Timeout, Cont1);
+                {more, _}=Cont1 ->
+                    ok = inet:setopts(Socket, [{active, once}]),
+                    loop(Module, Contract, Options, Pid, Socket, Timeout, Cont1)
+            end;
+        {changeContract, Pid, Contract1} ->
             loop(Module, Contract1, Options, Pid, Socket, Timeout, Cont);
-        {relay, _From, Pid1} ->
+        {relay, Pid, Pid1} ->
+            ok = inet:setopts(Socket, [{active, once}]),
             loop(Module, Contract, Options, Pid1, Socket, Timeout, Cont);
         {tcp_closed, Socket} ->
             exit(socket_closed);

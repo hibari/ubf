@@ -2,7 +2,7 @@
 
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2015 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,19 +25,19 @@
 
 +NAME("file_server").
 
-+VSN("ubf1.0").
++VSN("ubf2.0").
 
 +TYPES
 
-info()         = info;
-description()  = description;
-contract()     = contract;
+info()         :: info;
+description()  :: description;
+contract()     :: contract;
 
-file()         = string();
-ls()           = ls;
-files()        = {files, [file()]};
-getFile()      = {get, file()};
-noSuchFile()   = noSuchFile.
+file()         :: ubfstring();
+ls()           :: ls;
+files()        :: {files, [file()]};
+getFile()      :: {get, file()};
+noSuchFile()   :: noSuchFile.
 
 
 +STATE start

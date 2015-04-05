@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2015 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -26,7 +26,7 @@
 -module(ubf_driver).
 -behaviour(contract_driver).
 
--export([start/1, start/2, init/1, init/2, encode/3, decode/5]).
+-export([start/1, start/2, init/1, init/2, encode/3, decode/4]).
 
 start(Contract) ->
     start(Contract, []).
@@ -44,17 +44,13 @@ init(_Contract, Options) ->
 encode(Contract, _Safe, Term) ->
     [ubf:encode(Term, Contract), "\n"].
 
-decode(Contract, Safe, Cont, Binary, CallBack) ->
+decode(Contract, Safe, {init, Rest, undefined}, Binary) ->
     String = binary_to_list(Binary),
-    Cont1 = ubf:decode(String, Contract, Cont),
-    decode(Contract, Safe, Cont1, CallBack).
-
-decode(Contract, Safe, {ok, Term, String}=_Cont, CallBack) ->
-    CallBack(Term),
-    Cont1 = ubf:decode_init(Safe, String),
-    decode(Contract, Safe, Cont1, CallBack);
-decode(_Contract, _Safe, Cont, _CallBack) ->
-    Cont.
+    Cont = ubf:decode_init(Safe, Rest),
+    ubf:decode(String, Contract, Cont);
+decode(Contract, _Safe, Cont, Binary) ->
+    String = binary_to_list(Binary),
+    ubf:decode(String, Contract, Cont).
 
 safe(Options) ->
     proplists:get_bool(safe, Options).

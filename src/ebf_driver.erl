@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2015 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -33,7 +33,7 @@
 -module(ebf_driver).
 -behaviour(contract_driver).
 
--export([start/1, start/2, init/1, init/2, encode/3, decode/5]).
+-export([start/1, start/2, init/1, init/2, encode/3, decode/4]).
 
 start(Contract) ->
     start(Contract, []).
@@ -45,12 +45,10 @@ init(Contract) ->
     init(Contract, []).
 
 init(_Contract, Options) ->
-    {Options, undefined}.
+    {Options, {init, undefined, undefined}}.
 
 encode(_Contract, _Options, Term) ->
     erlang:term_to_binary(Term).
 
-decode(_Contract, Options, undefined, Binary, CallBack) ->
-    Term = erlang:binary_to_term(Binary, Options),
-    CallBack(Term),
-    undefined.
+decode(_Contract, Options, {init, undefined, undefined}, Binary) ->
+    {done, erlang:binary_to_term(Binary, Options), undefined, undefined}.

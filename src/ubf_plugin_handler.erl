@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2015 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -97,7 +97,6 @@ loop(Client, State, Data, Manager, Mod, TLogMod, Fun) ->
                     case (catch Mod:handlerRpc(State, Q, Data, Manager)) of
                         {Reply, State1, Data1} ->
                             Client ! {self(), {rpcReply, Reply, State1, same}},
-                            erlang:garbage_collect(),
                             loop(Client, State1, Data1, Manager, Mod, TLogMod, Fun);
                         {changeContract, Reply, Mod1, State1, Data1, Manager1} ->
                             Client ! {self(), {rpcReply, Reply, State,
@@ -120,18 +119,15 @@ loop(Client, State, Data, Manager, Mod, TLogMod, Fun) ->
                             exit({serverPluginHandler, Reason});
                         Reply ->
                             Client ! {self(), {rpcReply, Reply, State, same}},
-                            erlang:garbage_collect(),
                             loop(Client, State, Data, Manager, Mod, TLogMod, Fun)
                     end
             end;
         {Client, {event_in, Event}} ->
             %% asynchronous event handler
             Fun1 = Fun(Event),
-            erlang:garbage_collect(),
             loop(Client, State, Data, Manager, Mod, TLogMod, Fun1);
         {event_out, _}=Event ->
             Client ! {self(), Event},
-            erlang:garbage_collect(),
             loop(Client, State, Data, Manager, Mod, TLogMod, Fun);
         {install, Fun1} ->
             loop(Client, State, Data, Manager, Mod, TLogMod, Fun1);
@@ -172,27 +168,30 @@ manager_loop(ExitPid, Mod, State) ->
                 {accept, Mod1, ModManagerPid, State1} ->
                     From ! {self(), {accept, Mod1, ModManagerPid}},
                     manager_loop(ExitPid, Mod, State1);
-                {reject, Reason, _State} ->
+                {reject, Reason, State1} ->
                     From ! {self(), {reject, Reason}},
-                    manager_loop(ExitPid, Mod, State)
+                    manager_loop(ExitPid, Mod, State1)
             end;
         {client_has_stopped, Pid} ->
             case (catch Mod:handlerStop(Pid, normal, State)) of
                 {'EXIT', OOps} ->
                     io:format("plug in error:~p~n",[OOps]),
                     manager_loop(ExitPid, Mod, State);
-                State ->
-                    manager_loop(ExitPid, Mod, State)
+                State1 ->
+                    manager_loop(ExitPid, Mod, State1)
             end;
         {'EXIT', ExitPid, Reason} ->
             exit(Reason);
+        {'EXIT', _Pid, shutdown} ->
+            %% supervisor shutdown request
+            exit(shutdown);
         {'EXIT', Pid, Reason} ->
             case (catch Mod:handlerStop(Pid, Reason, State)) of
                 {'EXIT', OOps} ->
                     io:format("plug in error:~p~n",[OOps]),
                     manager_loop(ExitPid, Mod, State);
-                State ->
-                    manager_loop(ExitPid, Mod, State)
+                State1 ->
+                    manager_loop(ExitPid, Mod, State1)
             end;
         {From, {handler_rpc, Q}} ->
             case (catch Mod:managerRpc(Q, State)) of
@@ -200,9 +199,9 @@ manager_loop(ExitPid, Mod, State) ->
                     io:format("plug in error:~p~n",[OOps]),
                     exit(From, bad_ask_manager),
                     manager_loop(ExitPid, Mod, State);
-                {Reply, State} ->
+                {Reply, State1} ->
                     From ! {handler_rpc_reply, Reply},
-                    manager_loop(ExitPid, Mod, State)
+                    manager_loop(ExitPid, Mod, State1)
             end;
         X ->
             io:format("******Dropping (service manager ~p) self=~p ~p~n",

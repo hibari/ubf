@@ -1,0 +1,146 @@
+ubf-b          = ubf-b-name ubf-b-vsn [ubf-b-type] *ubf-b-state [ubf-b-anystate]
+
+ubf-b-name     = "+" 'NAME' "(" NONEMTPYSTRING ")" dot
+ubf-b-vsn      = "+" 'VSN' "(" NONEMTPYSTRING ")" dot
+ubf-b-type     = "+" 'TYPES' 1*WSP types dot
+ubf-b-state    = "+" 'STATE' 1*WSP statename 1*WSP transitions dot
+ubf-b-anystate = "+" 'ANYSTATE' 1*WSP anyrules dot
+
+dot            = "." *c-wsp c-nl
+semi           = ";" *c-wsp c-nl
+comment        = "%" *(WSP / VCHAR) CRLF
+c-nl           = comment / CRLF
+c-wsp          = WSP / (c-nl WSP)
+
+statename      = NONEMTPYATOM
+typename       = NONEMTPYATOM
+recordname     = NONEMTPYATOM
+fieldname      = NONEMTPYATOM
+
+types          = typedef
+               / (typedef semi types)
+
+typedef        = typeref *c-wsp "::" *c-wsp type [1*WSP annotation] *c-wsp
+
+transitions    = transition
+               / (transition semi transitions)
+
+transition     = typeref *c-wsp "=>" *c-wsp outputs *c-wsp
+               / event
+
+anyrules       = anyrule
+               / (anyrule semi anyrules)
+
+anyrule        = typeref *c-wsp "=>" *c-wsp typeref *c-wsp
+               / event
+
+event          = 'EVENT' *c-wsp ("=>" / "<=") *c-wsp typeref *c-wsp
+
+type           = primtype
+               / (primtype *c-wsp "|" *c-wsp type)
+
+annotation     = TAG / STRING / BINARY
+
+outputs        = output
+               / (output *c-wsp "|" *c-wsp outputs)
+
+output         = typeref *c-wsp "&" *c-wsp statename
+
+primtype       = (typeref [ "?" ])
+               / ("{" [typeseq] "}")
+               / ("#" recordname "{" [typerec] "}")
+               / ("##" recordname "{" [typerec] "}")
+               / typelist
+               / (INTEGER *WSP ".." *WSP INTEGER)
+               / (".." *WSP INTEGER)
+               / (INTEGER *WSP "..")
+               / ATOM
+               / BINARY
+               / FLOAT
+               / INTEGER
+               / STRING
+               / (predefinedtype [ "?" ])
+
+typelist       = ("[" [type] "]" [ "?" / "+" / ("{" listrange "}") ])
+
+typeref        = typename "()"
+
+typeseq        = type
+               / (type *WSP "," *WSP typeseq)
+
+typerec        = (fieldname *WSP "::" *WSP type)
+               / (fieldname *WSP "::" *WSP type "," *WSP typerec)
+               / (fieldname *WSP "=" *WSP default *WSP "::" *WSP type)
+               / (fieldname *WSP "=" *WSP default *WSP "::" *WSP type "," *WSP typerec)
+
+default        = ("{" [defaultseq] "}")
+               /  ("[" [defaultseq] "]")
+               / ATOM
+               / BINARY
+               / FLOAT
+               / INTEGER
+               / STRING
+defaultseq     = default
+               / (default *WSP "," *WSP defaultseq)
+
+listrange      = (1*DIGIT)
+               / (1*DIGIT *WSP ",")
+               / ("," *WSP 1*DIGIT)
+               / (1*DIGIT *WSP "," *WSP 1*DIGIT)
+
+ATOM           = (%x61-7A *(ALPHA / DIGIT / "_" / "@")) ;; a-z
+               / ("'" *(%x20-26 / %x28-7E) "'")
+
+NONEMTPYATOM   = (%x61-7A 1*(ALPHA / DIGIT / "_" / "@")) ;; a-z
+               / ("'" 1*(%x20-26 / %x28-7E) "'")
+
+BINARY         = "<<" STRING ">>"
+
+FLOAT          = ["-"] 1*DIGIT "." 1*DIGIT
+
+INTEGER        = (["-"] 1*DIGIT)
+               / (1*DIGIT "#" 1*(DIGIT / 'a' / 'b' / 'c' / 'd' / 'e' / 'f'))
+
+BTICK          = %x60
+
+TAG            = BTICK *(%x20-5F / %x61-7E) BTICK
+
+STRING         = DQUOTE *(%x20-21 / %x23-7E) DQUOTE
+
+NONEMTPYSTRING = DQUOTE 1*(%x20-21 / %x23-7E) DQUOTE
+
+predefinedtype = ('any' "(" [anyattrs] ")")
+               / ('none' "(" [noneattrs] ")")
+               / ('atom' "(" [atomattrs] ")")
+               / ('binary' "(" [binaryattrs] ")")
+               / ('float' "(" [floatattrs] ")")
+               / ('integer' "(" [integerattrs] ")")
+               / ('list' "(" [listattrs] ")")
+               / ('tuple' "(" [tupleattrs] ")")
+
+anyattrs       = anyattr
+               / (anyattr *WSP "," *WSP anyattrs)
+
+noneattrs      = *WSP
+
+atomattrs      = atomattr
+               / (atomattr *WSP "," *WSP atomattrs)
+
+binaryattrs    = binaryattr
+               / (binaryattr *WSP "," *WSP binaryattrs)
+
+floatattrs     = *WSP
+
+integerattrs   = *WSP
+
+listattrs      = listattr
+               / (listattr *WSP "," *WSP listattrs)
+
+tupleattrs     = tupleattr
+               / (tupleattr *WSP "," *WSP tupleattrs)
+
+anyattr        = 'nonempty' / 'nonundefined'
+atomattr       = 'ascii' / 'asciiprintable' / 'nonempty' / 'nonundefined'
+binaryattr     = 'ascii' / 'asciiprintable' / 'nonempty'
+listattr       = 'nonempty'
+tupleattr      = 'nonempty' / 'nonundefined'

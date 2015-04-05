@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2015 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -185,6 +185,8 @@ do_rpc(Client, Server, State, Mod, Q, SimpleRPC, VerboseRPC, TLogMod) ->
                                 Client ! {self(), {NewReply, NewState}}
                         end,
                     do_txlog(TLog),
+                    %% notify changed contract
+                    Client ! {changeContract, self(), NewMod},
                     loop(Client, Server, NewState, NewMod, SimpleRPC, VerboseRPC, TLogMod);
                 stop ->
                     exit(Server, stop)
