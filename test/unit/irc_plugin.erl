@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2015 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -46,8 +46,9 @@ managerStart(_) ->
     new_seed(),
     {ok, ets:new(irc, [])}.
 
-managerRestart(X, _) ->
-    managerStart(X).
+managerRestart(_, _) ->
+    %% noop
+    ok.
 
 handlerStart(_, _ManagerPid) ->
     {accept, yes, start, []}.
@@ -202,7 +203,7 @@ random_nick(N) ->
     [$a + random:uniform(26) - 1|random_nick(N-1)].
 
 new_seed() ->
-    {_,_,X} = erlang:now(),
+    {_,_,X} = os:timestamp(),
     {H,M,S} = time(),
     H1 = H * X rem 32767,
     M1 = M * X rem 32767,

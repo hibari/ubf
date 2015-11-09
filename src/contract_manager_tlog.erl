@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2015 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -41,7 +41,7 @@
 -export([eventOut/5, eventIn/5]).
 
 rpcIn(_TLogMod_x, _Q, _State, _Mod) ->
-    erlang:now().
+    os:timestamp().
 
 rpcOut(TLogMod_x, StartTime, Q, State, Mod, Reply, _NewState, _NewMod, Status) ->
     rpcOut2(tlm(TLogMod_x), StartTime, Q, State, Mod, Reply, _NewState, _NewMod, Status).
@@ -103,7 +103,7 @@ rpcFinish(TLog) ->
     TLog.
 
 lpcIn(_TLogMod_x, _Q, _State, _Mod) ->
-    erlang:now().
+    os:timestamp().
 
 lpcOut(TLogMod_x, StartTime, Q, State, Mod, Reply, _NewState, _NewMod, Status) ->
     lpcOut2(tlm(TLogMod_x), StartTime, Q, State, Mod, Reply, _NewState, _NewMod, Status).

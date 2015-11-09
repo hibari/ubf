@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2015 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -28,6 +28,7 @@
 -include("ubf_plugin_stateless.hrl").
 
 -export([info/0, description/0, keepalive/0]).
+-export([moduleStart/1, moduleRestart/1]).
 -export([handlerStart/1, handlerStop/3, handlerRpc/1]).
 
 -export([client_breaks_req01/0, client_timeout_req03/1]).
@@ -36,8 +37,8 @@
 %% NOTE the following two lines
 -compile({parse_transform,contract_parser}).
 -add_contract("./test/eunit/stateless_plugin").
--add_types({types_plugin, [contract_res,contract_req,description_res,description_req,info_res,info_req]}).
--add_types({types_plugin, [keepalive_res,keepalive_req]}).
+-add_types({types_plugin, [ubf_contract_res,ubf_contract_req,ubf_description_res,ubf_description_req,ubf_info_res,ubf_info_req]}).
+-add_types({types_plugin, [ubf_keepalive_res,ubf_keepalive_req]}).
 -add_types({types_plugin, [timeout]}).
 -add_types({types_plugin, [server_crash_res05,server_crash_req05,
                            server_timeout_res03,server_timeout_req03,
@@ -56,13 +57,25 @@ keepalive() ->
     ok.
 
 
+%% @spec moduleStart(Args::list(any())) -> Ignored::any()
+%% @doc start module
+moduleStart(_Args) ->
+    unused.
+
+%% @spec moduleRestart(Args::list(any())) -> Ignored::any()
+%% @doc restart module
+moduleRestart(Args) ->
+    moduleStart(Args).
+
+
+
 %% @spec handlerStart(Args::list(any())) ->
 %%          {accept, Reply::any(), StateName::atom(), StateData::term()} | {reject, Reason::any()}
 %% @doc start handler
 handlerStart(_Args) ->
     {accept,ok,none,unused}.
 
-%% @spec handlerStop(Pid::pid(), Reason::any(), StateData::term()) -> void()
+%% @spec handlerStop(Pid::pid(), Reason::any(), StateData::term()) -> none()
 %% @doc stop handler
 handlerStop(_Pid, _Reason, _StateData) ->
     unused.

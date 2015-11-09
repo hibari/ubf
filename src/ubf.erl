@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2015 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -48,7 +48,7 @@
 
 -record(state, {
           safe=false :: boolean(),
-          dict :: dict()
+          dict :: term() % FYI - dict:dict() vs. dict() Erlang/OTP 17 incompatibility
          }).
 
 
@@ -106,7 +106,7 @@ decode1([$&|T], [[H1,H2|T1] | Stack], State) ->
 decode1([$#|T], Stack, State) ->
     decode1(T, push([], Stack), State);
 decode1([$$|T], [[X]], _State) ->
-    {ok, X, T};
+    {done, X, T, undefined};
 decode1([$>], Stack, State) ->
     {more, fun(I) -> decode1([$>|I], Stack, State) end};
 decode1([$>,Key|T], [[Val|R]|Stack], #state{dict=Dict}=State) ->

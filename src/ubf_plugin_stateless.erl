@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2015 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -38,6 +38,9 @@
 -callback info() -> string().
 -callback description() -> string().
 
+-callback moduleStart(args()) -> any().
+-callback moduleRestart(args()) -> any().
+
 -callback handlerStart(args()) -> {accept, reply(), statename(), statedata()} | {reject, reason()}.
 -callback handlerStop(pid(), reason(), statedata()) -> any().
 -callback handlerRpc(event()) -> reply().
@@ -49,9 +52,13 @@
 behaviour_info(callbacks) ->
     [{info,0}
      , {description,0}
+     , {moduleStart,1}
+     , {moduleRestart,1}
      , {handlerStart,1}
      , {handlerStop,3}
      , {handlerRpc,1}
-    ].
+    ];
+behaviour_info(_Other) ->
+	undefined.
 
 -endif. % -ifndef(old_callbacks).

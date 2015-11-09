@@ -1,6 +1,6 @@
 %%% The MIT License
 %%%
-%%% Copyright (C) 2011 by Joseph Wayne Norton <norton@alum.mit.edu>
+%%% Copyright (C) 2011-2015 by Joseph Wayne Norton <norton@alum.mit.edu>
 %%% Copyright (C) 2002 by Joe Armstrong
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -41,13 +41,13 @@ defaultServer() ->  [Server] = [ Child || {Id,Child,_Type,_Module} <- supervisor
 test_etf() ->
     ss(),
     run(),
-    application:stop(test),
+    ok = application:stop(test),
     true.
 
 
 ss() ->
-    application:start(sasl),
-    application:stop(test),
+    _ = application:start(sasl),
+    _ = application:stop(test),
     ok = application:start(test).
 
 run() ->
